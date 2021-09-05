@@ -72,25 +72,59 @@ if __name__ == "__main__":
     
     # Checking if the path to the key file is correct or not !
     if (os.path.exists(key_loc)):
-        key_file = open(key_loc)
+        key_file = open(key_loc,'r')
     else:
         print("# Key file does not exist !!!")
         exit()
     
     # Checking if the path to the plain-text file is correct or not !
     if(os.path.exists(plain_loc)):
-        plain_file = open(palin_loc)
+        plain_file = open(plain_loc,'r')
     else:
         print("# Plain-text file does not exist !!!")
         exit()
     
     # Reading the key file
     if(debug):
-        print("# Reading the key file")
+        print("\n###### Reading the key file ######")
     
+    key_len = int(key_file.readline())
+    key = []
+    for i in range(key_len):
+        tmp = key_file.readline().upper().strip().split(" ")
+        key.append(tmp)
     
-    key_matrix = [[3,2],[3,5]]
-    plain_text = "AT"
+    if(debug):
+        print("# The size of the key is :",key_len)
+        print("# Printing the key :")
+        for i in range(key_len):
+            print (key[i])
+    
+    # Reading the palin-text file
+    if(debug):
+        print("\n###### Reading the plain-text file ######")
+    
+    plain = ""
+    tmp = plain_file.readline().upper()
+    while(tmp):
+        
+        # Cleaning the text
+        for i in range(len(tmp)):
+            if(tmp[i]>='A' and tmp[i]<='Z'):
+                plain = plain+tmp[i]
+        
+        tmp = plain_file.readline().upper()
+    
+    plain_len = len(plain)
+    
+    if(debug):
+        print("# The size of the plain-text is :",plain_len)
+        print("# Printing the palin-text :\n"+plain)
+    
+    # Processing the key
+    # Changing the key to integer % 26 [taking english language A=0 , .... , Z=25]
+    
+    exit()
 
     cipher_text = encrypt(key_matrix, plain_text)     
     # print("Cipher Matrix: \n", result)
