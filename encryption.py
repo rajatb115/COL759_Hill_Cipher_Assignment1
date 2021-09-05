@@ -123,6 +123,32 @@ if __name__ == "__main__":
     
     # Processing the key
     # Changing the key to integer % 26 [taking english language A=0 , .... , Z=25]
+    for i in range(key_len):
+        for j in range (key_len):
+            key[i][j] = ord(key[i][j])-ord('A')
+    
+    if(debug):
+        print("\n# Key after changing to integer")
+        print("# taking english language A=0 , .... , Z=25")
+        for i in range(key_len):
+            print(key[i])
+    
+    # Processing the plain-text
+    # Changing the palin-text to integer % 26 [taking english language A=0 , .... , Z=25]
+    
+    # 1) checking the length of the plain text and adding padding character is required
+    if(plain_len % key_len != 0):
+        # Appending X at the end of the text
+        plain = plain+'X'*(key_len-(plain_len % key_len))
+    
+    plain_len = len(plain)
+    
+    if(debug):
+        print("\n# Length of plain-text after appending 'X' :",plain_len)
+        print("# Plain-text after appending 'X' :")
+        print(plain)
+    
+    # 2) Changing the plain-text to integer % 26 [taking english language A=0 , .... , Z=25]
     
     exit()
 
