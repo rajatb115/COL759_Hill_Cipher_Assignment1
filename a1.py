@@ -1,6 +1,9 @@
 import numpy as np
 import math
 import sympy
+import os
+import sys
+
 
 def encrypt(key_matrix, plain_text):
     key_matrix = np.array(key_matrix)
@@ -46,18 +49,38 @@ def decrypt(key_matrix, cipher_text):
 		plain_text += chr(int(round(result[0][i], 0) % 26 + 65))
 	return plain_text
 
-if __name__ == "__main__":
-    # take input from the user
-    # plain_text = str(input("Plain Text: "))
-    # key_matrix = []
-    # key_size = int(input("Key Size: "))
-    # for i in range(key_size):
-    #     rows = []
-    #     for j in range(key_size):
-    #         value = int(input(str(i) + ", " + str(j) + " value: "))                         
-    #         rows.append(value)
-    #     key_matrix.append(rows)
 
+# main function 
+if __name__ == "__main__":
+    
+    # Take input form user using command line argument
+    # python3 encryption.py <key file> <plain-text file>
+    
+    if(len(sys.argv) != 3):
+        print("# Wrong command line argument use the following format :")
+        print("# python3 encryption.py <key file> <plain-text file>")
+        exit()
+    
+    key_loc = sys.argv[1]
+    plain_loc = sys.argv[2]
+    
+    print("# Location of key file :",key_loc)
+    print("# Location of plain-text file :",plain_loc)
+    
+    if (os.path.exists(key_loc)):
+        key_file = open(key_loc)
+    else:
+        print("# Key file does not exist !!!")
+        exit()
+    
+    if(os.path.exists(plain_loc)):
+        plain_file = open(palin_loc)
+    else:
+        print("# Plain-text file does not exist !!!")
+        exit()
+    
+    
+    
     key_matrix = [[3,2],[3,5]]
     plain_text = "AT"
 
