@@ -4,6 +4,8 @@ import sympy
 import os
 import sys
 
+debug = True
+
 
 def encrypt(key_matrix, plain_text):
     key_matrix = np.array(key_matrix)
@@ -64,21 +66,27 @@ if __name__ == "__main__":
     key_loc = sys.argv[1]
     plain_loc = sys.argv[2]
     
-    print("# Location of key file :",key_loc)
-    print("# Location of plain-text file :",plain_loc)
+    if(debug):
+        print("# Location of key file :",key_loc)
+        print("# Location of plain-text file :",plain_loc)
     
+    # Checking if the path to the key file is correct or not !
     if (os.path.exists(key_loc)):
         key_file = open(key_loc)
     else:
         print("# Key file does not exist !!!")
         exit()
     
+    # Checking if the path to the plain-text file is correct or not !
     if(os.path.exists(plain_loc)):
         plain_file = open(palin_loc)
     else:
         print("# Plain-text file does not exist !!!")
         exit()
     
+    # Reading the key file
+    if(debug):
+        print("# Reading the key file")
     
     
     key_matrix = [[3,2],[3,5]]
