@@ -48,31 +48,56 @@ def find_determinant(m):
     return np.linalg.det(matrix)
 '''
 
+def adjoin(mat):
+    
+    ml = len(mat)
+    
+    ad = []
+    
+    for i in range(ml):
+        tmp = []
+        for j in range(ml):
+            tmp.append([])
+        ad.append(tmp)
+    
+    for i in range(ml):
+        for j in range(ml):
+            tmp = []
+            for k in range(ml):
+                
+                if (k == i):
+                    continue
+                tmp2 = []
+                
+                for l in range(ml):
+                    if (l == j):
+                        continue
+                    
+                    tmp2.append(mat[k][l])
+                tmp.append(tmp2)
+            
+            ad[j][i] = ((-1)**(i+j))*find_determinant(tmp)
+    return ad
+
 
 def decrypt(key_matrix, cipher_text):
     
-    a2 = find_determinant(key_matrix)
-    key_matrix = np.array(key_matrix)
-    
-    # inv(k) = mod_inv(det (k)) * adj(k)
-    # inv(k) = mod_inv(det (k)) * det(k) * inv(k)
-    
-    a1 = np.linalg.inv(np.matrix(key_matrix))
-    #a2 = np.linalg.det(key_matrix)
-    a3 = sympy.mod_inverse(a2, 26)
-    
-    print(a1)
-    print(a2)
-    print(a3)
+    det = find_determinant(key_matrix)
+    adj = adjoin(key_matrix)
+    a3 = sympy.mod_inverse(det, 26)
+
     
     # Inverse of the key matrix
-    key_matrix_inv =  a1*a2*a3
+    key_matrix_inv = adj
+    
+    for i in range(len(key_matrix_inv)):
+        for j in range(len(key_matrix_inv)):
+            key_matrix_inv[i][j] = key_matrix_inv[i][j]*a3
+    
     cipher_text_matrix = np.array(cipher_text)
+    key_matrix_inv = np.array(key_matrix_inv)
 
-	# print(key_matrix_inv.shape)
-	# print(cipher_text_matrix.shape)
     result = np.array(np.dot(key_matrix_inv, cipher_text_matrix))
-    print(result)
 	# result = result.tolist()
     
     plain_text = ""
