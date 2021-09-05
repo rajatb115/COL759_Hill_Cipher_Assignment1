@@ -9,45 +9,6 @@ debug = True
 def getcofactor(m, i, j):
     return [row[: j] + row[j+1:] for row in (m[: i] + m[i+1:])]
 
-
-
-def encrypt(key_matrix, plain_text):
-    key_matrix = np.array(key_matrix)
-    plain_text_matrix = np.array(plain_text)
-    result = key_matrix.dot(plain_text_matrix)
-    
-    cipher_text = ""
-    
-    for j in range(len(result[0])):
-        for i in range(len(result)):
-            cipher_text += chr(result[i][j] % 26 + ord('A'))
-    return cipher_text
-
-def decrypt(key_matrix, cipher_text):
-	key_matrix = np.array(key_matrix)
-
-	a1 = np.linalg.inv(np.matrix(key_matrix))
-	a2 = np.linalg.det(key_matrix)
-	a3 = sympy.mod_inverse(np.linalg.det(key_matrix), 26)
-
-	key_matrix_inv =  a1*a2*a3
-
-	cipher_text_matrix = []
-	for i in range(len(cipher_text)):
-		cipher_text_matrix.append(ord(cipher_text[i]) - 65)
-	cipher_text_matrix = np.array(cipher_text_matrix)
-
-	# print(key_matrix_inv.shape)
-	print(cipher_text_matrix.shape)
-	result = np.array(np.dot(key_matrix_inv, cipher_text_matrix))
-	print(result)
-	# result = result.tolist()
-
-	plain_text = ""
-	for i in range(len(cipher_text)):
-		plain_text += chr(int(round(result[0][i], 0) % 26 + 65))
-	return plain_text
-
 # Function to find the gcd (using Euclidean algorithm)
 def find_gcd(val1 , val2):
     while(val2):
@@ -88,23 +49,55 @@ def find_determinant(m):
 '''
 
 
+def decrypt(key_matrix, cipher_text):
+    
+    a2 = find_determinant(key_matrix)
+    key_matrix = np.array(key_matrix)
+    
+    # inv(k) = mod_inv(det (k)) * adj(k)
+    # inv(k) = mod_inv(det (k)) * det(k) * inv(k)
+    
+    a1 = np.linalg.inv(np.matrix(key_matrix))
+    #a2 = np.linalg.det(key_matrix)
+    a3 = sympy.mod_inverse(a2, 26)
+    
+    print(a1)
+    print(a2)
+    print(a3)
+    
+    # Inverse of the key matrix
+    key_matrix_inv =  a1*a2*a3
+    cipher_text_matrix = np.array(cipher_text)
+
+	# print(key_matrix_inv.shape)
+	# print(cipher_text_matrix.shape)
+    result = np.array(np.dot(key_matrix_inv, cipher_text_matrix))
+    print(result)
+	# result = result.tolist()
+    
+    plain_text = ""
+    for j in range(len(result[0])):
+        for i in range(len(result)):
+            plain_text += chr(int(round(result[i][j], 0) % 26 + 65))
+    return plain_text
+
 # main function 
 if __name__ == "__main__":
     
     # Take input form user using command line argument
-    # python3 encryption.py <key file> <plain-text file>
+    # python3 decrypt.py <key file> <cipher-text file>
     
     if(len(sys.argv) != 3):
         print("# Wrong command line argument use the following format :")
-        print("# python3 encryption.py <key file> <plain-text file>")
+        print("# python3 decrypt.py <key file> <cipher-text file>")
         exit()
     
     key_loc = sys.argv[1]
-    plain_loc = sys.argv[2]
+    cipher_loc = sys.argv[2]
     
     if(debug):
         print("# Location of key file :",key_loc)
-        print("# Location of plain-text file :",plain_loc)
+        print("# Location of cipher-text file :",cipher_loc)
     
     # Checking if the path to the key file is correct or not !
     if (os.path.exists(key_loc)):
@@ -113,11 +106,11 @@ if __name__ == "__main__":
         print("# Key file does not exist !!!")
         exit()
     
-    # Checking if the path to the plain-text file is correct or not !
-    if(os.path.exists(plain_loc)):
-        plain_file = open(plain_loc,'r')
+    # Checking if the path to the cipher-text file is correct or not !
+    if(os.path.exists(cipher_loc)):
+        cipher_file = open(cipher_loc,'r')
     else:
-        print("# Plain-text file does not exist !!!")
+        print("# Cipher-text file does not exist !!!")
         exit()
     
     # Reading the key file
@@ -138,24 +131,24 @@ if __name__ == "__main__":
     
     # Reading the palin-text file
     if(debug):
-        print("\n###### Reading the plain-text file ######")
+        print("\n###### Reading the cipher-text file ######")
     
-    plain = ""
-    tmp = plain_file.readline().upper()
+    cipher = ""
+    tmp = cipher_file.readline().upper()
     while(tmp):
         
         # Cleaning the text
         for i in range(len(tmp)):
             if(tmp[i]>='A' and tmp[i]<='Z'):
-                plain = plain+tmp[i]
+                cipher = cipher+tmp[i]
         
-        tmp = plain_file.readline().upper()
+        tmp = cipher_file.readline().upper()
     
-    plain_len = len(plain)
+    cipher_len = len(cipher)
     
     if(debug):
-        print("# The size of the plain-text is :",plain_len)
-        print("# Printing the palin-text :\n"+plain)
+        print("# The size of the cipher-text is :",cipher_len)
+        print("# Printing the palin-text :\n"+cipher)
     
     # Processing the key
     # Changing the key to integer % 26 [taking english language A=0 , .... , Z=25]
@@ -169,46 +162,32 @@ if __name__ == "__main__":
         for i in range(key_len):
             print(key[i])
     
-    # Processing the plain-text
-    # Changing the palin-text to integer % 26 [taking english language A=0 , .... , Z=25]
-    
-    # 1) checking the length of the plain text and adding padding character is required
-    if(plain_len % key_len != 0):
-        # Appending X at the end of the text
-        plain = plain+'X'*(key_len-(plain_len % key_len))
-    
-    plain_len = len(plain)
+    # Processing the cipher-text
+    # Changing the cipher-text to integer % 26 [taking english language A=0 , .... , Z=25]
+    tmp = cipher
+    cipher = []
+    for i in range(cipher_len):
+        cipher.append(ord(tmp[i])-ord('A'))
     
     if(debug):
-        print("\n# Length of plain-text after appending 'X' :",plain_len)
-        print("# Plain-text after appending 'X' :")
-        print(plain)
-    
-    # 2) Changing the plain-text to integer % 26 [taking english language A=0 , .... , Z=25]
-    tmp = plain
-    plain = []
-    for i in range(plain_len):
-        plain.append(ord(tmp[i])-ord('A'))
-    
-    if(debug):
-        print("# Plain-text after changing to integer :")
-        print(plain)
+        print("# Cipher-text after changing to integer :")
+        print(cipher)
         
-    # 3) Changing the plain-text to n*k array where n*n is the key and n*k = plain_len
+    # 2) Changing the cipher-text to n*k array where n*n is the key and n*k = cipher_len
     tmp = []
     for i in range(key_len):
         tmp.append([])
         
     i = 0
-    while(i<plain_len):
+    while(i<cipher_len):
         for j in range(key_len):
-            tmp[j].append(plain[i])
+            tmp[j].append(cipher[i])
             i+=1;
-    plain = tmp
+    cipher = tmp
     
     if(debug):
-        print("\n# Plain-text after changing grouping according to key :")
-        for i in plain:
+        print("\n# Cipher-text after changing grouping according to key :")
+        for i in cipher:
             print(i)
             
     # Checking the constraints on Key
@@ -237,21 +216,14 @@ if __name__ == "__main__":
         print("# Choose a key whose determinant and key length are co-prime")
         exit ()
     
-    cipher_text = encrypt(key,plain)
+    plain_text = decrypt(key,cipher)
     
-    print("# Cipher text is :")
-    print(cipher_text)
+    print("# Plain text is :")
+    print(plain_text)
     
     key_file.close()
-    plain_file.close()
-    
-    cipher_file = open("cipher_text.txt",'w')
-    cipher_file.write(cipher_text)
     cipher_file.close()
     
-    
-    exit()
-
-    decrypted_plain_text = decrypt(key_matrix, cipher_text)
-
-    print("Decrypted plain text: ", decrypted_plain_text)
+    plain_file = open("plain_text_decrypt.txt",'w')
+    plain_file.write(plain_text)
+    plain_file.close()
