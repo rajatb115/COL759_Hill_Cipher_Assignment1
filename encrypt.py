@@ -9,8 +9,6 @@ debug = True
 def getcofactor(m, i, j):
     return [row[: j] + row[j+1:] for row in (m[: i] + m[i+1:])]
 
-
-
 def encrypt(key_matrix, plain_text):
     key_matrix = np.array(key_matrix)
     plain_text_matrix = np.array(plain_text)
@@ -22,31 +20,6 @@ def encrypt(key_matrix, plain_text):
         for i in range(len(result)):
             cipher_text += chr(result[i][j] % 26 + ord('A'))
     return cipher_text
-
-def decrypt(key_matrix, cipher_text):
-	key_matrix = np.array(key_matrix)
-
-	a1 = np.linalg.inv(np.matrix(key_matrix))
-	a2 = np.linalg.det(key_matrix)
-	a3 = sympy.mod_inverse(np.linalg.det(key_matrix), 26)
-
-	key_matrix_inv =  a1*a2*a3
-
-	cipher_text_matrix = []
-	for i in range(len(cipher_text)):
-		cipher_text_matrix.append(ord(cipher_text[i]) - 65)
-	cipher_text_matrix = np.array(cipher_text_matrix)
-
-	# print(key_matrix_inv.shape)
-	print(cipher_text_matrix.shape)
-	result = np.array(np.dot(key_matrix_inv, cipher_text_matrix))
-	print(result)
-	# result = result.tolist()
-
-	plain_text = ""
-	for i in range(len(cipher_text)):
-		plain_text += chr(int(round(result[0][i], 0) % 26 + 65))
-	return plain_text
 
 # Function to find the gcd (using Euclidean algorithm)
 def find_gcd(val1 , val2):
@@ -248,10 +221,3 @@ if __name__ == "__main__":
     cipher_file = open("cipher_text.txt",'w')
     cipher_file.write(cipher_text)
     cipher_file.close()
-    
-    
-    exit()
-
-    decrypted_plain_text = decrypt(key_matrix, cipher_text)
-
-    print("Decrypted plain text: ", decrypted_plain_text)
