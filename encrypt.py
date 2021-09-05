@@ -218,6 +218,6 @@ if __name__ == "__main__":
     key_file.close()
     plain_file.close()
     
-    cipher_file = open("cipher_text.txt",'w')
+    cipher_file = open("cipher_text_encrypt.txt",'w')
     cipher_file.write(cipher_text)
     cipher_file.close()
