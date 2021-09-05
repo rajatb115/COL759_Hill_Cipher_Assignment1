@@ -98,7 +98,6 @@ def decrypt(key_matrix, cipher_text):
     key_matrix_inv = np.array(key_matrix_inv)
 
     result = np.array(np.dot(key_matrix_inv, cipher_text_matrix))
-	# result = result.tolist()
     
     plain_text = ""
     for j in range(len(result[0])):
