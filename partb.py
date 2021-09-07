@@ -7,6 +7,31 @@ import sys
 debug = True
 
 
+def find_ic(txt):
+    
+    # count the occurance of the characters
+    cnt=[]
+    for i in range(26):
+        cnt.append(0)
+    
+    for i in range(len(txt)):
+        cnt[ord(txt[i])-ord("A")]+=1
+    
+    txt_length = len(txt)
+    
+    # using formula IC = (sum_i (f_i*(f_i-1)))/(n*(n-1))
+    
+    IC = 0
+    
+    for i in range(26):
+        IC = IC + cnt[i]*(cnt[i]-1)
+    IC = IC/(txt_lenght * (txt_length - 1))
+    
+    return IC
+
+
+
+
 # main function 
 if __name__ == "__main__":
     
