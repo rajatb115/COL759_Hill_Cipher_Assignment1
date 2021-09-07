@@ -153,7 +153,7 @@ if __name__ == "__main__":
         for i in range(key_len):
             print (key[i])
     
-    # Reading the palin-text file
+    # Reading the cipher-text file
     if(debug):
         print("\n###### Reading the cipher-text file ######")
     
