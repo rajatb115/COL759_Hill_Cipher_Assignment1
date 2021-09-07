@@ -84,6 +84,8 @@ def decrypt(key_matrix, cipher_text):
     
     det = find_determinant(key_matrix)
     adj = adjoin(key_matrix)
+    
+    
     a3 = sympy.mod_inverse(det, 26)
 
     
