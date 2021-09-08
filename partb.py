@@ -108,74 +108,133 @@ def modInverse(a, m):
             return x
     return -1
 
+def find_batch(plain_txt, cipher_txt, epoc, key_size):
+    plain =[]
+    cipher = []
+    
+    for i in range(epoc,epoc+key_size**2,1):
+        plain.append(plain_txt[i])
+        cipher.append(cipher_txt[i])
+    
+    return plain,cipher
 
-
+# Function to find the  key
 def find_key(key_size,cipher,plain):
     cipher_txt = []
     plain_txt = []
     
-    for i in range(key_size**2):
+    for i in range(min(len(plain),len(cipher))):
         cipher_txt.append(ord(cipher[i])-ord("A"))
         plain_txt.append(ord(plain[i])-ord("A"))
         
-    print(cipher_txt)
-    print(plain_txt)
+    if(debug):
+        print("cipher txt :",cipher_txt)
+        print("plain txt :",plain_txt)
     
-    # AX=B
-    A = []
     
-    for i in range(key_size):
-        tmp = []
-        for j in range(key_size):
-            tmp.append(cipher_txt[i*key_size+j])
-        A.append(tmp)
+    possible_key = []
+    
+    epoc=0
+    while(True):
         
-    print(A)
-    # X = A-1 B mod 26
-    
-    # Find A-1 mod 26
-    det = find_determinant(A)
-    
-    if(det == 0):
-        return -1
-    
-    # Find A inverse mod 26
-    adj = adjoin(A)
-    while(det < 0):
-        det+=26
+        # reading the plain text batch and cipher text batch
+        batch_plain, batch_cipher = find_batch(plain_txt, cipher_txt, epoc, key_size)
         
-    # Is it required ?
-    gcd = find_gcd(det,26)
-    if(gcd != 1):
-        return -1
-    
-    ### what to do here ?
-    a3 = sympy.mod_inverse(abs(det), 26)
-    A_inv = adj
-    
-    for i in range(len(A_inv)):
-        for j in range(len(A_inv)):
-            A_inv[i][j] = A_inv[i][j]*a3
-    
-    A_inv_np = np.array(A_inv)
-    
-    X = []
-    
-    for i in range(key_size):
-        B = []
-        for j in range(key_size):
-            B.append(plain_txt[i+key_size*j])
-        B_np = np.array(B)
+        if (debug):
+            print("batch_plain:",batch_plain)
+            print("batch_cipher:",batch_cipher)
         
-        result = np.array(np.dot(A_inv_np, B_np))
-        X.append(result)
-    
-    for i in range(len(X)):
-        for j in range(len(X[i])):
-            X[i][j] = X[i][j]%26
+        # AX=B
+        A = []
+        for i in range(key_size):
+            tmp = []
+            for j in range(key_size):
+                tmp.append(batch_cipher[i*key_size+j])
+            A.append(tmp)
         
-    print(X)
-    return X
+        if(debug):
+            print("Printing A :",A)
+        
+        # X = A-1 B mod 26
+        
+        # Find A-1 mod 26
+        
+        # Testing determinent if det = 0 then the matrix is not invertible
+        det = find_determinant(A)
+        
+        if(debug):
+            print("det =",det)
+        
+        if(det == 0):
+            epoc+=1
+            if(len(plain) < epoc+key_size**2):
+                break
+            continue
+        
+        # Find A inverse mod 26
+        adj = adjoin(A)
+            
+        gcd = find_gcd(abs(det),26)
+        
+        if(debug):
+            print("gcd of det with 26=", gcd)
+        
+        if(gcd != 1):
+            epoc+=1
+            if(len(plain) < epoc+key_size**2):
+                break
+            continue
+        
+        a3 = sympy.mod_inverse(det, 26)
+        
+        if(debug):
+            print("multiplicative inverse of det=",a3)
+        
+        A_inv = adj
+        
+        for i in range(len(A_inv)):
+            for j in range(len(A_inv)):
+                A_inv[i][j] = A_inv[i][j]*a3
+        
+        
+        
+        A_inv_np = np.array(A_inv)
+        
+        if(debug):
+            print("A inv =",A_inv)
+        
+        X = []
+    
+        for i in range(key_size):
+            B = []
+            for j in range(key_size):
+                B.append(batch_plain[i+key_size*j])
+            B_np = np.array(B)
+            
+            if(debug):
+                print("B=",B)
+            
+            result = np.array(np.dot(A_inv_np, B_np))
+            X.append(result)
+
+        
+        for i in range(len(X)):
+            for j in range(len(X[i])):
+                X[i][j] = X[i][j]%26
+        
+        possible_key.append(X)
+        
+        if(debug):
+            print("key size :",key_size,"Key :",X)
+        
+        epoc+=1
+        if(len(plain) < epoc+key_size**2):
+            break
+    
+    return possible_key
+        
+
+    
 # main function 
 if __name__ == "__main__":
     
@@ -253,12 +312,6 @@ if __name__ == "__main__":
     IC = []
     for i in range(2,5,1):
         key = find_key(i,cipher,plain)
-        
-        if(key == -1):
-            IC.append(-1)
-            continue
-            
-        print(key)
         
         continue
         

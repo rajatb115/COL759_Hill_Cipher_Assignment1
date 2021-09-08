@@ -86,6 +86,7 @@ def decrypt(key_matrix, cipher_text):
     adj = adjoin(key_matrix)
     
     
+    
     a3 = sympy.mod_inverse(det, 26)
 
     
@@ -95,6 +96,7 @@ def decrypt(key_matrix, cipher_text):
     for i in range(len(key_matrix_inv)):
         for j in range(len(key_matrix_inv)):
             key_matrix_inv[i][j] = key_matrix_inv[i][j]*a3
+            
     
     cipher_text_matrix = np.array(cipher_text)
     key_matrix_inv = np.array(key_matrix_inv)
