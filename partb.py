@@ -42,12 +42,6 @@ def find_determinant(mat):
     # returning the final Sum
     return Sum
 
-'''
-def find_determinant(m):
-    matrix =  np.array(m)
-    return np.linalg.det(matrix)
-'''
-
 def adjoin(mat):
     
     ml = len(mat)
@@ -80,27 +74,32 @@ def adjoin(mat):
     return ad
 
 
-def find_ic(txt):
+def find_ic(k_txt):
     
-    # count the occurance of the characters
-    cnt=[]
-    for i in range(26):
-        cnt.append(0)
+    k_IC = []
+    for k, txt in k_txt:
     
-    for i in range(len(txt)):
-        cnt[ord(txt[i])-ord("A")]+=1
+        # count the occurance of the characters
+        cnt=[]
+        for i in range(26):
+            cnt.append(0)
+
+        for i in range(len(txt)):
+            cnt[ord(txt[i])-ord("A")]+=1
+
+        txt_length = len(txt)
+
+        # using formula IC = (sum_i (f_i*(f_i-1)))/(n*(n-1))
+
+        IC = 0
+
+        for i in range(26):
+            IC = IC + cnt[i]*(cnt[i]-1)
+        IC = IC/(txt_length * (txt_length - 1))
+        
+        k_IC.append([k,IC])
     
-    txt_length = len(txt)
-    
-    # using formula IC = (sum_i (f_i*(f_i-1)))/(n*(n-1))
-    
-    IC = 0
-    
-    for i in range(26):
-        IC = IC + cnt[i]*(cnt[i]-1)
-    IC = IC/(txt_lenght * (txt_length - 1))
-    
-    return IC
+    return k_IC
 
 def modInverse(a, m):
     for x in range(1, m):
@@ -141,26 +140,31 @@ def find_key(key_size,cipher,plain):
         batch_plain, batch_cipher = find_batch(plain_txt, cipher_txt, epoc, key_size)
         
         if (debug):
-            print("batch_plain:",batch_plain)
+            print("\nbatch_plain:",batch_plain)
             print("batch_cipher:",batch_cipher)
         
         # AX=B
-        A = []
+        A_plain = []
+        B_cipher = []
         for i in range(key_size):
-            tmp = []
+            tmp_cipher = []
+            tmp_plain = []
             for j in range(key_size):
-                tmp.append(batch_cipher[i*key_size+j])
-            A.append(tmp)
+                tmp_cipher.append(batch_cipher[i+j*key_size])
+                tmp_plain.append(batch_plain[i+j*key_size])
+            A_plain.append(tmp_plain)
+            B_cipher.append(tmp_cipher)
         
         if(debug):
-            print("Printing A :",A)
+            print("Printing A_plain :",A_plain)
+            print("Printing B_cipher :",B_cipher)
         
-        # X = A-1 B mod 26
+        # X = B A-1 mod 26
         
         # Find A-1 mod 26
         
         # Testing determinent if det = 0 then the matrix is not invertible
-        det = find_determinant(A)
+        det = find_determinant(A_plain)
         
         if(debug):
             print("det =",det)
@@ -172,7 +176,6 @@ def find_key(key_size,cipher,plain):
             continue
         
         # Find A inverse mod 26
-        adj = adjoin(A)
             
         gcd = find_gcd(abs(det),26)
         
@@ -190,39 +193,33 @@ def find_key(key_size,cipher,plain):
         if(debug):
             print("multiplicative inverse of det=",a3)
         
+        adj = adjoin(A_plain)
         A_inv = adj
         
         for i in range(len(A_inv)):
             for j in range(len(A_inv)):
-                A_inv[i][j] = A_inv[i][j]*a3
+                A_inv[i][j] = A_inv[i][j]*a3 
         
         
         
         A_inv_np = np.array(A_inv)
+        B_np = np.array(B_cipher)
         
         if(debug):
             print("A inv =",A_inv)
         
-        X = []
-    
-        for i in range(key_size):
-            B = []
-            for j in range(key_size):
-                B.append(batch_plain[i+key_size*j])
-            B_np = np.array(B)
-            
-            if(debug):
-                print("B=",B)
-            
-            result = np.array(np.dot(A_inv_np, B_np))
-            X.append(result)
-
+        X = np.array(np.dot(B_np, A_inv_np))
+        
+        key = []
         
         for i in range(len(X)):
+            tmp = []
             for j in range(len(X[i])):
                 X[i][j] = X[i][j]%26
+                tmp.append(X[i][j])
+            key.append(tmp)
         
-        possible_key.append(X)
+        possible_key.append(key)
         
         if(debug):
             print("key size :",key_size,"Key :",X)
@@ -232,7 +229,76 @@ def find_key(key_size,cipher,plain):
             break
     
     return possible_key
+
+def decrypt(key_matrix, cipher_text):
+    
+    det = find_determinant(key_matrix)
+    adj = adjoin(key_matrix)
+    
+    a3 = sympy.mod_inverse(det, 26)
+
+    
+    # Inverse of the key matrix
+    key_matrix_inv = adj
+    
+    for i in range(len(key_matrix_inv)):
+        for j in range(len(key_matrix_inv)):
+            key_matrix_inv[i][j] = key_matrix_inv[i][j]*a3
+            
+    cipher_text_matrix = np.array(cipher_text)
+    key_matrix_inv = np.array(key_matrix_inv)
+
+    result = np.array(np.dot(key_matrix_inv, cipher_text_matrix))
+    
+    plain_text = ""
+    for j in range(len(result[0])):
+        for i in range(len(result)):
+            plain_text += chr(int(round(result[i][j], 0) % 26 + 65))
+    return plain_text
+
+
+def decrypt_text(key, cipher):
+    
+    txt_key = []
+    
+    for k in key:
         
+        
+        cipher_txt = []
+        for i in range(len(cipher)):
+            cipher_txt.append(ord(cipher[i])-ord("A"))
+
+        tmp1 = []
+
+        for _ in range(len(k)):
+            tmp1.append([])
+
+        ii = 0
+        while(ii<((len(cipher)//len(k))*len(k))):
+            for j in range(len(k)):
+                tmp1[j].append(cipher_txt[ii])
+                ii+=1;
+
+        cipher_mat = tmp1
+        
+        
+        key_len = len(k)
+        tmp = []
+        
+        det = find_determinant(k)
+        if(det == 0):
+            continue
+        
+        gcd = find_gcd(abs(det),26)
+        if(gcd !=1):
+            continue
+        
+        plain_text = decrypt(k,cipher_mat)
+        tmp.append(k)
+        tmp.append(plain_text)
+        
+        txt_key.append(tmp)
+    return txt_key
 
     
 # main function 
@@ -313,25 +379,30 @@ if __name__ == "__main__":
     for i in range(2,5,1):
         key = find_key(i,cipher,plain)
         
-        continue
-        
         decrypt_txt = decrypt_text(key, cipher)
         
-        IC.append(find_ic(decrypt_txt))
+        IC1=find_ic(decrypt_txt)
         
-    exit()
-    
+        if(len(IC1)>0):
+            for ic in IC1:
+                IC.append(ic)
+        
+        print(IC)
     # IC of english = 0.065
-    key_size = 2
-    closest_IC = abs(0.065-IC[0])
-    for i in range(3):
-        if(abs(0.065-IC[i])<closest_IC):
-            closest_IC = abs(0.065-IC[i])
-            key_size = i+2
+    key = IC[0][0]
+    ICval = IC[0][1]
+    closest_IC = abs(0.065-IC[0][1])
+    for i in range(len(IC)):
+        if(abs(0.065-IC[i][1])<closest_IC):
+            closest_IC = abs(0.065-IC[i][1])
+            key = IC[i][0]
+            ICval = IC[i][1]
     
-    key = find_key(key_size,cipher,plain)
-    print("Key size =",key_size)
-    print("Key",key)
+    print("Key size =",len(key))
+    print("Key:",key)
+    print("IC:",closest_IC)
+    print("ICval :",ICval)
+    
     
     
         
