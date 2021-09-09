@@ -4,7 +4,7 @@ import sympy
 import os
 import sys
 
-debug = True
+debug = False
 
 def getcofactor(m, i, j):
     return [row[: j] + row[j+1:] for row in (m[: i] + m[i+1:])]
@@ -85,10 +85,7 @@ def decrypt(key_matrix, cipher_text):
     det = find_determinant(key_matrix)
     adj = adjoin(key_matrix)
     
-    
-    
     a3 = sympy.mod_inverse(det, 26)
-
     
     # Inverse of the key matrix
     key_matrix_inv = adj
@@ -174,9 +171,8 @@ if __name__ == "__main__":
     
     cipher_len = len(cipher)
     
-    if(debug):
-        print("# The size of the cipher-text is :",cipher_len)
-        print("# Printing the palin-text :\n"+cipher)
+    print("# The size of the cipher-text is :",cipher_len)
+    print("# Printing the palin-text :\n"+cipher)
     
     # Processing the key
     # Changing the key to integer % 26 [taking english language A=0 , .... , Z=25]
@@ -233,15 +229,15 @@ if __name__ == "__main__":
         print("# Choose a key whose determinant is Zero")
         exit()
     
-    # 2) Checking if determinant of the key and key_len are co-prime
-    gcd = find_gcd(abs(det),key_len)
+    # 2) Checking if determinant of the key and 26 are co-prime
+    gcd = find_gcd(abs(det), 26)
     
     if (debug):
-        print("\n# GCD of the determinant of key and key_len is :",gcd)
+        print("\n# GCD of the determinant of key and 26 is :",gcd)
     
     if(gcd != 1 ):
-        print("# GCD of Determinant of the key matrix and key length is not 1. (Not co-prime)")
-        print("# Choose a key whose determinant and key length are co-prime")
+        print("# GCD of Determinant of the key matrix and 26 is not 1. (Not co-prime)")
+        print("# Choose a key whose determinant and 26 are co-prime")
         exit ()
     
     plain_text = decrypt(key,cipher)
