@@ -4,7 +4,7 @@ import sympy
 import os
 import sys
 
-debug = True
+debug = False
 
 def getcofactor(m, i, j):
     return [row[: j] + row[j+1:] for row in (m[: i] + m[i+1:])]
@@ -107,11 +107,11 @@ def modInverse(a, m):
             return x
     return -1
 
-def find_batch(plain_txt, cipher_txt, epoc, key_size):
+def find_batch(plain_txt, cipher_txt, epoch, key_size):
     plain =[]
     cipher = []
     
-    for i in range(epoc,epoc+key_size**2,1):
+    for i in range(epoch,epoch+key_size**2,1):
         plain.append(plain_txt[i])
         cipher.append(cipher_txt[i])
     
@@ -119,25 +119,26 @@ def find_batch(plain_txt, cipher_txt, epoc, key_size):
 
 # Function to find the  key
 def find_key(key_size,cipher,plain):
+    
     cipher_txt = []
     plain_txt = []
     
+    # Convert the cipher text and plain text into integers
     for i in range(min(len(plain),len(cipher))):
         cipher_txt.append(ord(cipher[i])-ord("A"))
         plain_txt.append(ord(plain[i])-ord("A"))
-        
+    
     if(debug):
         print("cipher txt :",cipher_txt)
         print("plain txt :",plain_txt)
     
-    
     possible_key = []
     
-    epoc=0
+    epoch=0
     while(True):
         
-        # reading the plain text batch and cipher text batch
-        batch_plain, batch_cipher = find_batch(plain_txt, cipher_txt, epoc, key_size)
+        # reading the plain text batch and cipher text batch for current epoc
+        batch_plain, batch_cipher = find_batch(plain_txt, cipher_txt, epoch, key_size)
         
         if (debug):
             print("\nbatch_plain:",batch_plain)
@@ -160,18 +161,24 @@ def find_key(key_size,cipher,plain):
             print("Printing B_cipher :",B_cipher)
         
         # X = B A-1 mod 26
-        
         # Find A-1 mod 26
-        
         # Testing determinent if det = 0 then the matrix is not invertible
-        det = find_determinant(A_plain)
+        
+        ###################################
+        # To speed up the code
+        #det = find_determinant(A_plain)
+        
+        A_tmp = np.array(A_plain)
+        det = round(np.linalg.det(A_tmp))
+        
+        ###################################
         
         if(debug):
             print("det =",det)
         
         if(det == 0):
-            epoc+=1
-            if(len(plain) < epoc+key_size**2):
+            epoch+=1
+            if(len(plain) < epoch+key_size**2):
                 break
             continue
         
@@ -183,8 +190,8 @@ def find_key(key_size,cipher,plain):
             print("gcd of det with 26=", gcd)
         
         if(gcd != 1):
-            epoc+=1
-            if(len(plain) < epoc+key_size**2):
+            epoch+=1
+            if(len(plain) < epoch+key_size**2):
                 break
             continue
         
@@ -192,17 +199,25 @@ def find_key(key_size,cipher,plain):
         
         if(debug):
             print("multiplicative inverse of det=",a3)
+            
         
-        adj = adjoin(A_plain)
+        #######################################
+        # to speedup the code
+        # adj = adjoin(A_plain)
+        a1 = np.linalg.inv(A_tmp)
+        adj = a1 * det
+        
+        #######################################
+        
         A_inv = adj
         
         for i in range(len(A_inv)):
             for j in range(len(A_inv)):
-                A_inv[i][j] = A_inv[i][j]*a3 
+                A_inv[i][j] = (round(A_inv[i][j])*a3 )%26
         
         
         
-        A_inv_np = np.array(A_inv)
+        A_inv_np = np.int_(np.array(A_inv))
         B_np = np.array(B_cipher)
         
         if(debug):
@@ -219,13 +234,14 @@ def find_key(key_size,cipher,plain):
                 tmp.append(X[i][j])
             key.append(tmp)
         
-        possible_key.append(key)
+        if key not in possible_key:
+            possible_key.append(key)
         
         if(debug):
             print("key size :",key_size,"Key :",X)
         
-        epoc+=1
-        if(len(plain) < epoc+key_size**2):
+        epoch+=1
+        if(len(plain) < epoch+key_size**2):
             break
     
     return possible_key
@@ -281,7 +297,6 @@ def decrypt_text(key, cipher):
 
         cipher_mat = tmp1
         
-        
         key_len = len(k)
         tmp = []
         
@@ -300,7 +315,40 @@ def decrypt_text(key, cipher):
         txt_key.append(tmp)
     return txt_key
 
+
+def decrypt_plain(key, cipher):
     
+    cipher_txt = []
+    for i in range(len(cipher)):
+        cipher_txt.append(ord(cipher[i])-ord("A"))
+
+    tmp1 = []
+
+    for _ in range(len(key)):
+        tmp1.append([])
+        
+    ii = 0
+    while(ii<((len(cipher)//len(key))*len(key))):
+        for j in range(len(key)):
+            tmp1[j].append(cipher_txt[ii])
+            ii+=1;
+    
+    cipher_mat = tmp1
+    
+    key_len = len(key)
+    tmp = []
+
+    det = find_determinant(key)
+    if(det == 0):
+        return "wrong key : determinant is zero"
+
+    gcd = find_gcd(abs(det),26)
+    if(gcd !=1):
+        return "wrong key : gcd of det and 26 is not 1 "
+    
+    return decrypt(key,cipher_mat)
+    
+
 # main function 
 if __name__ == "__main__":
     
@@ -312,8 +360,9 @@ if __name__ == "__main__":
         print("# python3 partb.py <cipher-text file> <plain-text file>")
         exit()
     
-    plain_loc = sys.argv[2]
     cipher_loc = sys.argv[1]
+    plain_loc = sys.argv[2]
+    
     
     if(debug):
         print("# Location of key file :",plain_loc)
@@ -350,9 +399,8 @@ if __name__ == "__main__":
     
     cipher_len = len(cipher)
     
-    if(debug):
-        print("# The size of the cipher-text is :",cipher_len)
-        print("# Printing the palin-text :\n"+cipher)
+    print("# The size of the cipher-text is :",cipher_len)
+    print("# Printing the cipher-text :\n"+cipher)
     
     # Reading the plain-text file
     if(debug):
@@ -371,23 +419,28 @@ if __name__ == "__main__":
     
     plain_len = len(plain)
     
-    if(debug):
-        print("# The size of the plain-text is :",plain_len)
-        print("# Printing the palin-text :\n"+plain)
+    print("# The size of the plain-text is :",plain_len)
+    print("# Printing the palin-text :\n"+plain)
         
     IC = []
-    for i in range(2,5,1):
+    for i in range(2,11,1):
+        
+        # Find all the possible keys of each size
         key = find_key(i,cipher,plain)
         
+        # Decrypt the cipher text using the expected keys
         decrypt_txt = decrypt_text(key, cipher)
         
+        # check the IC of the decrypted text for the given keys
         IC1=find_ic(decrypt_txt)
         
         if(len(IC1)>0):
             for ic in IC1:
                 IC.append(ic)
         
-        print(IC)
+        if(debug):
+            print(IC)
+    
     # IC of english = 0.065
     key = IC[0][0]
     ICval = IC[0][1]
@@ -398,10 +451,15 @@ if __name__ == "__main__":
             key = IC[i][0]
             ICval = IC[i][1]
     
+    # Print the results
     print("Key size =",len(key))
-    print("Key:",key)
-    print("IC:",closest_IC)
-    print("ICval :",ICval)
+    print("Key :",key)
+    print("IC_deviation from 0.065 :",closest_IC)
+    print("IC value :",ICval)
+    
+    plain_decrypt = decrypt_plain(key,cipher)
+    
+    print("Decrypted Text :\n"+plain_decrypt)
     
     
     
