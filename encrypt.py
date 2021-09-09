@@ -4,7 +4,7 @@ import sympy
 import os
 import sys
 
-debug = True
+debug = False
 
 def getcofactor(m, i, j):
     return [row[: j] + row[j+1:] for row in (m[: i] + m[i+1:])]
@@ -126,9 +126,8 @@ if __name__ == "__main__":
     
     plain_len = len(plain)
     
-    if(debug):
-        print("# The size of the plain-text is :",plain_len)
-        print("# Printing the palin-text :\n"+plain)
+    print("# The size of the plain-text is :",plain_len)
+    print("# Printing the palin-text :\n"+plain)
     
     # Processing the key
     # Changing the key to integer % 26 [taking english language A=0 , .... , Z=25]
