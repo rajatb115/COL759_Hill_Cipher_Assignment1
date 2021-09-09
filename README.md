@@ -20,7 +20,7 @@ Using the "debug" (True / False) varible in "encrypt.py" we can see the intermed
 ```
 python3 decrypt.py <key file> <cipher-text file>
 
-python3 decrypt.py key1.txt 
+python3 decrypt.py key1.txt cipher_text_encrypt.txt
 ```
 The above command will decrypt the cipher-text file and the output will be saved in "plain_text_decrypt.txt" file in the current working directory. Cipher-text file will contain English characters without any special character or space.
 
